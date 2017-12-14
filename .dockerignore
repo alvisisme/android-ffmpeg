@@ -1,4 +1,11 @@
-LICENSE
-README.md
-.gitignore
 .git/
+_temp/
+.vscode/
+.gitignore
+aaccoder.patch
+build.sh
+download.sh
+LICENSE
+Makefile
+prebuild.sh
+README.md
