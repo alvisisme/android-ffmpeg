@@ -26,7 +26,7 @@
   make
   ```
 
-* 进入docker镜像,将工程**_temp**目录挂载至镜像**/_temp**目录
+* 进入docker镜像,将工程 _temp 目录挂载至镜像 /_temp 目录
 
   ```shell
   docker run -i -t -v `pwd`/_temp:/_temp ffmpeg-dev /bin/bash
