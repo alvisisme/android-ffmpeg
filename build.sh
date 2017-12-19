@@ -5,13 +5,16 @@ ARCH=arm64
 TOOLCHAIN_NAME=aarch64-linux-android-4.9
 HOST=aarch64-linux-android
 TOOL_PREFIX=${HOST}-
-TOOLCHAIN_PATH=`pwd`/${ARCH}/bin
+TOOLCHAIN_PATH=/_temp/${ARCH}/bin
 NDK_TOOLCHAIN_BASENAME=${TOOLCHAIN_PATH}/${TOOL_PREFIX}
 SYSROOT=${TOOLCHAIN_PATH}/../sysroot
 
+export PATH=$PATH:/_temp/arm64/bin
+
+echo $PATH
 # build ffmpeg
 echo 'building ffmpeg ...'
-cd ffmpeg-3.4.1
+cd /_temp/ffmpeg-3.4.1
 ./configure \
   --prefix=$TOOLCHAIN_PATH/.. \
   --enable-gpl \
@@ -43,15 +46,15 @@ cd ffmpeg-3.4.1
   --cross-prefix=$TOOL_PREFIX \
   --enable-cross-compile \
   --sysroot=$SYSROOT \
-  --nm=${NDK_TOOLCHAIN_BASENAME}nm \
-  --ar=${NDK_TOOLCHAIN_BASENAME}ar \
-  --strip=${NDK_TOOLCHAIN_BASENAME}strip \
-  --cc=${NDK_TOOLCHAIN_BASENAME}gcc \
-  --cxx=${NDK_TOOLCHAIN_BASENAME}g++ \
-  --ranlib=${NDK_TOOLCHAIN_BASENAME}ranlib \
+  --nm=${TOOL_PREFIX}nm \
+  --ar=${TOOL_PREFIX}ar \
+  --strip=${TOOL_PREFIX}strip \
+  --cc=${TOOL_PREFIX}gcc \
+  --cxx=${TOOL_PREFIX}g++ \
+  --ranlib=${TOOL_PREFIX}ranlib \
   --extra-cflags="" \
   --extra-cxxflags="-march=armv8-a" \
-  --extra-ldflags="-lm -ldl" \
+  --extra-ldflags="-lm -ldl -lc" \
   --extra-libs="-lgcc" \
   --extra-ldexeflags="-pie" \
   --enable-pic \
@@ -61,9 +64,9 @@ make
 make install
 
 # generating libffmpeg.so
-${NDK_TOOLCHAIN_BASENAME}gcc fftools/*.o libavutil/*.o libavcodec/*.o libavformat/*.o libavfilter/*.o libswscale/*.o libswresample/*.o libpostproc/*.o -o libffmpeg.so -fPIC --shared -Isrc -lm -ldl -lc
+${TOOL_PREFIX}gcc fftools/*.o compat/*.o libavutil/*.o libavutil/aarch64/*.o libavcodec/*.o libavcodec/aarch64/*.o libavformat/*.o libavfilter/*.o libswscale/*.o libswscale/aarch64/*.o libswresample/*.o libswresample/aarch64/*.o libpostproc/*.o -o libffmpeg.so -fPIC --shared -Isrc -lm -ldl -lc
 cp libffmpeg.so $TOOLCHAIN_PATH/../lib/libffmpeg.so
-${NDK_TOOLCHAIN_BASENAME}strip --strip-unneeded $TOOLCHAIN_PATH/../lib/libffmpeg.so
+${TOOL_PREFIX}strip --strip-unneeded $TOOLCHAIN_PATH/../lib/libffmpeg.so
 
-cd ..
+cd ../..
 echo 'building ffmpeg done'

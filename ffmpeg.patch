@@ -1,0 +1,128 @@
+diff -Nrua ffmpeg-3.4.1/fftools/ffmpeg.c ffmpeg-3.4.1-patch/fftools/ffmpeg.c
+--- ffmpeg-3.4.1/fftools/ffmpeg.c	2017-12-11 05:35:18.000000000 +0800
++++ ffmpeg-3.4.1-patch/fftools/ffmpeg.c	2017-12-19 11:42:35.000000000 +0800
+@@ -4841,3 +4841,77 @@
+     exit_program(received_nb_signals ? 255 : main_return_code);
+     return main_return_code;
+ }
++
++int ffmpeg_cmd_start(int argc, char **argv)
++{
++    int i, ret;
++    int64_t ti;
++
++    init_dynload();
++
++    register_exit(ffmpeg_cleanup);
++
++    setvbuf(stderr,NULL,_IONBF,0); /* win32 runtime needs this */
++
++    av_log_set_flags(AV_LOG_SKIP_REPEATED);
++    parse_loglevel(argc, argv, options);
++
++    if(argc>1 && !strcmp(argv[1], "-d")){
++        run_as_daemon=1;
++        av_log_set_callback(log_callback_null);
++        argc--;
++        argv++;
++    }
++
++    avcodec_register_all();
++#if CONFIG_AVDEVICE
++    avdevice_register_all();
++#endif
++    avfilter_register_all();
++    av_register_all();
++    avformat_network_init();
++
++    show_banner(argc, argv, options);
++
++    /* parse options and open all input/output files */
++    ret = ffmpeg_parse_options(argc, argv);
++    if (ret < 0)
++        exit_program(1);
++
++    if (nb_output_files <= 0 && nb_input_files == 0) {
++        show_usage();
++        av_log(NULL, AV_LOG_WARNING, "Use -h to get full help or, even better, run 'man %s'\n", program_name);
++        exit_program(1);
++    }
++
++    /* file converter / grab */
++    if (nb_output_files <= 0) {
++        av_log(NULL, AV_LOG_FATAL, "At least one output file must be specified\n");
++        exit_program(1);
++    }
++
++//     if (nb_input_files == 0) {
++//         av_log(NULL, AV_LOG_FATAL, "At least one input file must be specified\n");
++//         exit_program(1);
++//     }
++
++    for (i = 0; i < nb_output_files; i++) {
++        if (strcmp(output_files[i]->ctx->oformat->name, "rtp"))
++            want_sdp = 0;
++    }
++
++    current_time = ti = getutime();
++    if (transcode() < 0)
++        exit_program(1);
++    ti = getutime() - ti;
++    if (do_benchmark) {
++        av_log(NULL, AV_LOG_INFO, "bench: utime=%0.3fs\n", ti / 1000000.0);
++    }
++    av_log(NULL, AV_LOG_DEBUG, "%"PRIu64" frames successfully decoded, %"PRIu64" decoding errors\n",
++           decode_error_stat[0], decode_error_stat[1]);
++    if ((decode_error_stat[0] + decode_error_stat[1]) * max_error_rate < decode_error_stat[1])
++        exit_program(69);
++
++    exit_program(received_nb_signals ? 255 : main_return_code);
++    return main_return_code;
++}
+\ No newline at end of file
+diff -Nrua ffmpeg-3.4.1/fftools/ffmpeg.h ffmpeg-3.4.1-patch/fftools/ffmpeg.h
+--- ffmpeg-3.4.1/fftools/ffmpeg.h	2017-12-11 05:35:06.000000000 +0800
++++ ffmpeg-3.4.1-patch/fftools/ffmpeg.h	2017-12-19 11:42:46.000000000 +0800
+@@ -676,4 +676,6 @@
+ 
+ int hwaccel_decode_init(AVCodecContext *avctx);
+ 
++int ffmpeg_cmd_start(int argc, char **argv);
++
+ #endif /* FFTOOLS_FFMPEG_H */
+diff -Nrua ffmpeg-3.4.1/libavcodec/aaccoder.c ffmpeg-3.4.1-patch/libavcodec/aaccoder.c
+--- ffmpeg-3.4.1/libavcodec/aaccoder.c	2017-12-11 05:35:06.000000000 +0800
++++ ffmpeg-3.4.1-patch/libavcodec/aaccoder.c	2017-12-19 11:41:35.000000000 +0800
+@@ -800,7 +800,7 @@
+ 
+                 for (sid_sf_boost = 0; sid_sf_boost < 4; sid_sf_boost++) {
+                     float dist1 = 0.0f, dist2 = 0.0f;
+-                    int B0 = 0, B1 = 0;
++                    int _B0 = 0, B1 = 0;
+                     int minidx;
+                     int mididx, sididx;
+                     int midcb, sidcb;
+@@ -862,12 +862,12 @@
+                                                     sididx,
+                                                     sidcb,
+                                                     mslambda / (minthr * bmax), INFINITY, &b4, NULL, 0);
+-                        B0 += b1+b2;
++                        _B0 += b1+b2;
+                         B1 += b3+b4;
+                         dist1 -= b1+b2;
+                         dist2 -= b3+b4;
+                     }
+-                    cpe->ms_mask[w*16+g] = dist2 <= dist1 && B1 < B0;
++                    cpe->ms_mask[w*16+g] = dist2 <= dist1 && B1 < _B0;
+                     if (cpe->ms_mask[w*16+g]) {
+                         if (sce0->band_type[w*16+g] != NOISE_BT && sce1->band_type[w*16+g] != NOISE_BT) {
+                             sce0->sf_idx[w*16+g] = mididx;
+@@ -879,7 +879,7 @@
+                             cpe->ms_mask[w*16+g] = 0;
+                         }
+                         break;
+-                    } else if (B1 > B0) {
++                    } else if (B1 > _B0) {
+                         /* More boost won't fix this */
+                         break;
+                     }

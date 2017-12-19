@@ -40,12 +40,12 @@ if [ ! -d _temp/ffmpeg-3.4.1 ]; then
   cd ..
   echo "extracting ffmpeg done"
 fi
-if [ ! -f _temp/ffmpeg-3.4.1/libavcodec/aaccoder.patch ]; then
+if [ ! -f _temp/ffmpeg.patch ]; then
   echo "patching ffmpeg ..."
-  cp aaccoder.patch _temp/ffmpeg-3.4.1/libavcodec/aaccoder.patch
-  cd _temp/ffmpeg-3.4.1/libavcodec
-  patch -p0 -i aaccoder.patch
-  cd ../../../
+  cp ffmpeg.patch _temp/ffmpeg.patch
+  cd _temp
+  patch -p0 -i ffmpeg.patch
+  cd ../
   echo "patching ffmpeg done"
 fi
 

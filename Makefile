@@ -1,4 +1,4 @@
-all: download prebuild build-env
+all: download prebuild build-env build
 
 download:
 	sh download.sh
@@ -8,3 +8,6 @@ prebuild:
 
 build-env:
 	docker build . -t ffmpeg-dev
+
+build:
+	docker run -i -t -v `pwd`/_temp:/_temp ffmpeg-dev sh /_temp/build.sh
