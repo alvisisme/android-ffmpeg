@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e
 
+# build x264
+sh /_temp/build-x264.sh
+
+# build fdk-aac
+sh /_temp/build-fdk-aac.sh
+
+# build ffmpeg
+echo 'building ffmpeg ...'
+
 ARCH=arm64
 TOOLCHAIN_NAME=aarch64-linux-android-4.9
 HOST=aarch64-linux-android
@@ -9,14 +18,22 @@ TOOLCHAIN_PATH=/_temp/${ARCH}/bin
 NDK_TOOLCHAIN_BASENAME=${TOOLCHAIN_PATH}/${TOOL_PREFIX}
 SYSROOT=${TOOLCHAIN_PATH}/../sysroot
 
-export PATH=$PATH:/_temp/arm64/bin
+export CC=${NDK_TOOLCHAIN_BASENAME}gcc
+export CXX=${NDK_TOOLCHAIN_BASENAME}g++
+export LINK=${CXX}
+export LD=${NDK_TOOLCHAIN_BASENAME}ld
+export AR=${NDK_TOOLCHAIN_BASENAME}ar
+export RANLIB=${NDK_TOOLCHAIN_BASENAME}ranlib
+export STRIP=${NDK_TOOLCHAIN_BASENAME}strip
+export OBJCOPY=${NDK_TOOLCHAIN_BASENAME}objcopy
+export OBJDUMP=${NDK_TOOLCHAIN_BASENAME}objdump
+export NM=${NDK_TOOLCHAIN_BASENAME}nm
+export AS=${NDK_TOOLCHAIN_BASENAME}as
+export PATH=${TOOLCHAIN_PATH}:$PATH
 
-echo $PATH
-# build ffmpeg
-echo 'building ffmpeg ...'
 cd /_temp/ffmpeg-3.4.1
-./configure \
-  --prefix=$TOOLCHAIN_PATH/.. \
+./configure  \
+  --prefix=$TOOLCHAIN_PATH/..  \
   --enable-gpl \
   --enable-version3 \
   --enable-nonfree \
@@ -25,11 +42,15 @@ cd /_temp/ffmpeg-3.4.1
   --disable-ffserver \
   --disable-doc \
   --disable-avdevice \
+  --disable-pthreads \
   --disable-pixelutils \
   --disable-everything \
+  --enable-encoder=libx264 \
   --enable-encoder=aac \
+  --enable-encoder=libfdk_aac \
   --enable-decoder=h264 \
   --enable-decoder=aac \
+  --enable-decoder=libfdk_aac \
   --enable-muxer=hls \
   --enable-muxer=h264 \
   --enable-muxer=rtsp \
@@ -41,32 +62,21 @@ cd /_temp/ffmpeg-3.4.1
   --enable-parser=aac \
   --enable-protocol=file \
   --enable-protocol=hls \
+  --enable-libfdk-aac \
+  --enable-libx264 \
   --arch=aarch64 \
-  --target-os=linux \
-  --cross-prefix=$TOOL_PREFIX \
-  --enable-cross-compile \
+  --cross-prefix="$NDK_TOOLCHAIN_BASENAME"  \
+  --enable-cross-compile  \
   --sysroot=$SYSROOT \
-  --nm=${TOOL_PREFIX}nm \
-  --ar=${TOOL_PREFIX}ar \
-  --strip=${TOOL_PREFIX}strip \
-  --cc=${TOOL_PREFIX}gcc \
-  --cxx=${TOOL_PREFIX}g++ \
-  --ranlib=${TOOL_PREFIX}ranlib \
-  --extra-cflags="" \
-  --extra-cxxflags="-march=armv8-a" \
-  --extra-ldflags="-lm -ldl -lc" \
-  --extra-libs="-lgcc" \
+  --target-os=linux \
+  --extra-cflags="-march=armv8-a -I${TOOLCHAIN_PATH}/../include -I${TOOLCHAIN_PATH}/../fdk_aac"  \
+  --extra-ldflags="-lm -Wl,-Bsymbolic -L${TOOLCHAIN_PATH}/../lib -L${SYSROOT}/usr/lib"  \
   --extra-ldexeflags="-pie" \
+  --extra-libs="-lgcc" \
   --enable-pic \
-  --ignore-tests \
+  --ignore-tests
 
+make clean
 make
 make install
-
-# generating libffmpeg.so
-${TOOL_PREFIX}gcc fftools/*.o compat/*.o libavutil/*.o libavutil/aarch64/*.o libavcodec/*.o libavcodec/aarch64/*.o libavformat/*.o libavfilter/*.o libswscale/*.o libswscale/aarch64/*.o libswresample/*.o libswresample/aarch64/*.o libpostproc/*.o -o libffmpeg.so -fPIC --shared -Isrc -lm -ldl -lc
-cp libffmpeg.so $TOOLCHAIN_PATH/../lib/libffmpeg.so
-${TOOL_PREFIX}strip --strip-unneeded $TOOLCHAIN_PATH/../lib/libffmpeg.so
-
 cd ../..
-echo 'building ffmpeg done'

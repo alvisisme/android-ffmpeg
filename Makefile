@@ -10,4 +10,4 @@ build-env:
 	docker build . -t ffmpeg-dev
 
 build:
-	docker run -i -t -v `pwd`/_temp:/_temp ffmpeg-dev sh /_temp/build.sh
+	docker run -i -t --rm -v `pwd`/_temp:/_temp ffmpeg-dev sh /_temp/build.sh

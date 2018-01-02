@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 ARCH=arm64
 TOOLCHAIN_NAME=aarch64-linux-android-4.9
@@ -19,20 +20,20 @@ if [ ! -d _temp/arm64 ]; then
   --install-dir=`pwd`/_temp/$ARCH
 fi
 
-# if [ ! -d _temp/x264-snapshot-20171210-2245-stable ]; then
-#   echo "extracting x264 ..."
-#   cd _temp
-#   tar xjvf x264-snapshot-20171210-2245-stable.tar.bz2  > /dev/null
-#   cd ..
-#   echo "extracting x264 done"
-# fi
-# if [ ! -d _temp/fdk-aac-0.1.5 ]; then
-#   echo "extracting fdk-aac ..."
-#   cd _temp
-#   tar zxvf fdk-aac-0.1.5.tar.gz > /dev/null
-#   cd ..
-#   echo "extracting fdk-aac done"
-# fi
+if [ ! -d _temp/x264-snapshot-20171210-2245-stable ]; then
+  echo "extracting x264 ..."
+  cd _temp
+  tar xjvf x264-snapshot-20171210-2245-stable.tar.bz2  > /dev/null
+  cd ..
+  echo "extracting x264 done"
+fi
+if [ ! -d _temp/fdk-aac-0.1.5 ]; then
+  echo "extracting fdk-aac ..."
+  cd _temp
+  tar zxvf fdk-aac-0.1.5.tar.gz > /dev/null
+  cd ..
+  echo "extracting fdk-aac done"
+fi
 if [ ! -d _temp/ffmpeg-3.4.1 ]; then
   echo "extracting ffmpeg ..."
   cd _temp
@@ -49,5 +50,7 @@ if [ ! -f _temp/ffmpeg.patch ]; then
   echo "patching ffmpeg done"
 fi
 
+cp build-fdk-aac.sh _temp/build-fdk-aac.sh
+cp build-x264.sh _temp/build-x264.sh
 cp build.sh _temp/build.sh
 
