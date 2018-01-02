@@ -4,7 +4,7 @@ set -e
 ARCH=arm64
 TOOLCHAIN_NAME=aarch64-linux-android-4.9
 
-if [ $ANDROID_NDK ]; then
+if [ -d $ANDROID_NDK ]; then
   echo "ndk root path = $ANDROID_NDK"
 else
   echo "cannot find ndk path, please set ANDROID_NDK env"
@@ -50,20 +50,18 @@ if [ ! -f _temp/ffmpeg.patch ]; then
   echo "patching ffmpeg done"
 fi
 
-[ ! -f _temp/build-fdk-aac.sh ] && {
+if [ ! -f _temp/build-fdk-aac.sh ]; then
   cp build-fdk-aac.sh _temp/build-fdk-aac.sh
-}
+fi
 
-[ ! -f _temp/build-x264.sh ] && {
+if [ ! -f _temp/build-x264.sh ]; then
   cp build-x264.sh _temp/build-x264.sh
-}
+fi
 
-[ ! -d _temp/ffmpeg_cmd_src ] && {
+if [ ! -d _temp/ffmpeg_cmd_src ]; then
   cp -r ffmpeg_cmd_src _temp/ffmpeg_cmd_src
-}
+fi
 
-[ ! -f _temp/build.sh ] && {
+if [ ! -f _temp/build.sh ]; then
   cp build.sh _temp/build.sh
-}
-
-
+fi
