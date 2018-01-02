@@ -18,6 +18,7 @@ cd /_temp/x264-snapshot-20171210-2245-stable
   --host=${HOST} \
   --sysroot=$SYSROOT \
   --enable-static \
+  --disable-shared \
   --enable-pic \
   --disable-cli \
   --extra-cflags="-march=armv8-a" \

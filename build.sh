@@ -79,4 +79,12 @@ cd /_temp/ffmpeg-3.4.1
 make clean
 make
 make install
+
+$LD -rpath-link=${TOOLCHAIN_PATH}/../lib -rpath-link=${SYSROOT}/usr/lib -L${TOOLCHAIN_PATH}/../lib -L${SYSROOT}/usr/lib -soname libffmpeg.so -shared -nostdlib -Bsymbolic --whole-archive --no-undefined -o libffmpeg.so libavcodec/libavcodec.a libavfilter/libavfilter.a libswresample/libswresample.a libavformat/libavformat.a libavutil/libavutil.a libswscale/libswscale.a libpostproc/libpostproc.a -lc -lm -lz -ldl -llog -lx264 -lfdk-aac --dynamic-linker=/system/bin/linker $TOOLCHAIN_PATH/../lib/gcc/aarch64-linux-android/4.9.x/libgcc.a
+cp libffmpeg.so ${TOOLCHAIN_PATH}/../lib/libffmpeg.so
+$STRIP --strip-unneeded $TOOLCHAIN_PATH/../lib/libffmpeg.so
+cd ../..
+
+cd /_temp/ffmpeg_cmd_src
+sh build.sh
 cd ../..

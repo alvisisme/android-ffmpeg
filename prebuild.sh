@@ -50,7 +50,20 @@ if [ ! -f _temp/ffmpeg.patch ]; then
   echo "patching ffmpeg done"
 fi
 
-cp build-fdk-aac.sh _temp/build-fdk-aac.sh
-cp build-x264.sh _temp/build-x264.sh
-cp build.sh _temp/build.sh
+[ ! -f _temp/build-fdk-aac.sh ] && {
+  cp build-fdk-aac.sh _temp/build-fdk-aac.sh
+}
+
+[ ! -f _temp/build-x264.sh ] && {
+  cp build-x264.sh _temp/build-x264.sh
+}
+
+[ ! -d _temp/ffmpeg_cmd_src ] && {
+  cp -r ffmpeg_cmd_src _temp/ffmpeg_cmd_src
+}
+
+[ ! -f _temp/build.sh ] && {
+  cp build.sh _temp/build.sh
+}
+
 

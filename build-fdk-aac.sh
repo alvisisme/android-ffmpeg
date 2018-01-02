@@ -15,6 +15,7 @@ cd /_temp/fdk-aac-0.1.5
   --host=$HOST \
   --with-sysroot=$SYSROOT \
   --enable-static \
+  --disable-shared \
   CC="${NDK_TOOLCHAIN_BASENAME}gcc" \
   CXX="${NDK_TOOLCHAIN_BASENAME}g++" \
   STRIP="${NDK_TOOLCHAIN_BASENAME}strip" \
