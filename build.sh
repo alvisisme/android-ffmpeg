@@ -16,7 +16,7 @@ AS_ORI=$AS
 # AS must be CC
 export AS=${CC}
 if [ ! -f ${HOME}/${X264_ZIP} ]; then
-  wget ftp://ftp.videolan.org/pub/videolan/x264/${X264_ZIP}
+  wget ftp://ftp.videolan.org/pub/videolan/x264/snapshots/${X264_ZIP}
 fi
 if [ ! -d ${HOME}/${X264_DIR} ]; then
   tar xjvf ${HOME}/${X264_ZIP}  > /dev/null
