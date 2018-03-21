@@ -1,11 +1,7 @@
 .git/
 _temp/
+out/
 .vscode/
 .gitignore
-aaccoder.patch
-build.sh
-download.sh
 LICENSE
-Makefile
-prebuild.sh
 README.md

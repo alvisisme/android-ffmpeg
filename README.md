@@ -1,27 +1,36 @@
-# android-ffmpeg
+# Build ffmpeg for android
 
-编译android平台arm64架构ffmpeg库
+Build ffmpeg and cmd tools for android(arm64)
 
-## 测试环境
+## Build Environment
 
-* Ubuntu16.40
-* android-ndk-r13b
+  * Ubuntu 16.04.4 LTS(amd64)
 
-## 如何编译
+  * Docker version 17.12.1-ce, build 7390fc6
 
-* 下载该工程
+## Related Source and tools
+
+  * [fdk-aac-0.1.5](https://nchc.dl.sourceforge.net/project/opencore-amr/fdk-aac/fdk-aac-0.1.5.tar.gz)
+
+  * [x264-snapshot-20171210-2245-stable](ftp://ftp.videolan.org/pub/videolan/x264/x264-snapshot-20171210-2245-stable.tar.bz2)
+
+  * [ffmpeg-3.4.1](http://ffmpeg.org/releases/ffmpeg-3.4.1.tar.bz2)
+
+  * [android ndk r13b](https://dl.google.com/android/repository/android-ndk-r13b-linux-x86_64.zip)
+
+## How to build
+
+* Download this project
 
   ```shell
   git https://github.com/alvisisme/android-ffmpeg.git
   ```
 
-* 搭建编译环境
+* Build
 
-  根据NDK安装路径, 配置NDK环境变量
   ```shell
-  export ANDROID_NDK=/opt/android-ndk
-  ```
-  执行构建命令
-  ```shell
+  cd android-ffmpeg
   make
   ```
+
+  Check the **out** directory for output files.

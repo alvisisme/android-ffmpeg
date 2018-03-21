@@ -1,10 +1,27 @@
-FROM alvisisme/docker-ubuntu-1604-163
+# https://github.com/alvisisme/docker-android-ndk/blob/r13b/Dockerfile
+FROM alvisisme/docker-android-ndk:r13b
+LABEL maintainer="Alvis Zhao<alvisisme@gmail.com>"
+ENTRYPOINT []
+CMD ["/bin/bash","/home/dev/arm64/bin/build.sh"]
+VOLUME ["/home/dev/out"]
 
-# update system
-RUN apt-get update && \
-		apt-get -y upgrade && \
-		apt-get install -y build-essential gawk && \
-		apt-get autoclean && \
-		apt-get autoremove
+ENV PATH=$PATH:/home/dev/arm64/bin
+ENV CC=/home/dev/arm64/bin/aarch64-linux-android-gcc
+ENV CXX=/home/dev/arm64/bin/aarch64-linux-android-g++
+ENV LINK=/home/dev/arm64/bin/aarch64-linux-android-g++
+ENV LD=/home/dev/arm64/bin/aarch64-linux-android-ld
+ENV AR=/home/dev/arm64/bin/aarch64-linux-android-ar
+ENV RANLIB=/home/dev/arm64/bin/aarch64-linux-android-ranlib
+ENV STRIP=/home/dev/arm64/bin/aarch64-linux-android-strip
+ENV OBJCOPY=/home/dev/arm64/bin/aarch64-linux-android-objcopy
+ENV OBJDUMP=/home/dev/arm64/bin/aarch64-linux-android-objdump
+ENV NM=/home/dev/arm64/bin/aarch64-linux-android-nm
+ENV AS=/home/dev/arm64/bin/aarch64-linux-android-as
+ENV PLATFORM=android
+ENV CFLAGS="-D__ANDROID_API__=21"
 
-VOLUME /_temp
+RUN sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y binutils build-essential gawk
+RUN /usr/local/android-ndk-r13b/build/tools/make_standalone_toolchain.py --arch arm64 --api 21 --stl gnustl --force --install-dir /home/dev/arm64
+COPY build.sh /home/dev/arm64/bin/build.sh
+COPY ffmpeg.patch /home/dev/ffmpeg.patch
+COPY ffmpeg_cmd_src /home/dev/ffmpeg_cmd_src

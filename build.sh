@@ -1,39 +1,81 @@
 #!/bin/bash
 set -e
 
-# build x264
-sh /_temp/build-x264.sh
+BUILD_DIR=/home/dev/out
+HOME=/home/dev
 
-# build fdk-aac
-sh /_temp/build-fdk-aac.sh
-
-# build ffmpeg
-echo 'building ffmpeg ...'
-
-ARCH=arm64
-TOOLCHAIN_NAME=aarch64-linux-android-4.9
+PREFIX=/home/dev/arm64
 HOST=aarch64-linux-android
-TOOL_PREFIX=${HOST}-
-TOOLCHAIN_PATH=/_temp/${ARCH}/bin
-NDK_TOOLCHAIN_BASENAME=${TOOLCHAIN_PATH}/${TOOL_PREFIX}
-SYSROOT=${TOOLCHAIN_PATH}/../sysroot
+CORSS_PREFIX=aarch64-linux-android-
 
-export CC=${NDK_TOOLCHAIN_BASENAME}gcc
-export CXX=${NDK_TOOLCHAIN_BASENAME}g++
-export LINK=${CXX}
-export LD=${NDK_TOOLCHAIN_BASENAME}ld
-export AR=${NDK_TOOLCHAIN_BASENAME}ar
-export RANLIB=${NDK_TOOLCHAIN_BASENAME}ranlib
-export STRIP=${NDK_TOOLCHAIN_BASENAME}strip
-export OBJCOPY=${NDK_TOOLCHAIN_BASENAME}objcopy
-export OBJDUMP=${NDK_TOOLCHAIN_BASENAME}objdump
-export NM=${NDK_TOOLCHAIN_BASENAME}nm
-export AS=${NDK_TOOLCHAIN_BASENAME}as
-export PATH=${TOOLCHAIN_PATH}:$PATH
+# ====== x264 begin ======
+cd ${HOME}
+X264_ZIP=x264-snapshot-20171210-2245-stable.tar.bz2
+X264_DIR=x264-snapshot-20171210-2245-stable
+AS_ORI=$AS
+# AS must be CC
+export AS=${CC}
+if [ ! -f ${HOME}/${X264_ZIP} ]; then
+  wget ftp://ftp.videolan.org/pub/videolan/x264/${X264_ZIP}
+fi
+if [ ! -d ${HOME}/${X264_DIR} ]; then
+  tar xjvf ${HOME}/${X264_ZIP}  > /dev/null
+fi
+cd ${HOME}/${X264_DIR}
+./configure \
+  --prefix=${PREFIX} \
+  --cross-prefix=${CORSS_PREFIX} \
+  --host=${HOST} \
+  --enable-static \
+  --enable-pic \
+  --disable-cli \
+  --extra-cflags="-march=armv8-a"
 
-cd /_temp/ffmpeg-3.4.1
+make clean
+make
+make install
+# reset AS
+export AS=${AS_ORI}
+# ====== x264 end ======
+
+# ====== fdk-aac begin ======
+cd ${HOME}
+AAC_ZIP=fdk-aac-0.1.5.tar.gz
+AAC_DIR=fdk-aac-0.1.5
+if [ ! -f ${HOME}/${AAC_ZIP} ]; then
+  wget https://nchc.dl.sourceforge.net/project/opencore-amr/fdk-aac/${AAC_ZIP}
+fi
+if [ ! -d ${HOME}/${AAC_DIR} ]; then
+  tar zxvf ${HOME}/${AAC_ZIP} > /dev/null
+fi
+cd ${HOME}/${AAC_DIR}
+./configure \
+  --prefix=${PREFIX} \
+  --host=${HOST} \
+  --enable-static \
+  --disable-shared \
+  CFLAGS="-Wno-sequence-point -Wno-extra" \
+
+make clean
+make
+make install
+# ====== fdk-aac end ======
+
+# ====== ffmpeg begin ======
+cd ${HOME}
+FFMPEG_ZIP=ffmpeg-3.4.1.tar.bz2
+FFMPEG_DIR=ffmpeg-3.4.1
+if [ ! -f ${HOME}/${FFMPEG_ZIP} ]; then
+  wget http://ffmpeg.org/releases/${FFMPEG_ZIP}
+fi
+if [ ! -d ${HOME}/${FFMPEG_DIR} ]; then
+  tar xjvf ${FFMPEG_ZIP} > /dev/null
+  patch -p0 -i ffmpeg.patch
+fi
+
+cd ${HOME}/${FFMPEG_DIR}
 ./configure  \
-  --prefix=$TOOLCHAIN_PATH/..  \
+  --prefix=${PREFIX} \
   --enable-gpl \
   --enable-version3 \
   --enable-nonfree \
@@ -65,12 +107,11 @@ cd /_temp/ffmpeg-3.4.1
   --enable-libfdk-aac \
   --enable-libx264 \
   --arch=aarch64 \
-  --cross-prefix="$NDK_TOOLCHAIN_BASENAME"  \
-  --enable-cross-compile  \
-  --sysroot=$SYSROOT \
+  --cross-prefix=${CORSS_PREFIX} \
+  --enable-cross-compile \
   --target-os=linux \
-  --extra-cflags="-march=armv8-a -I${TOOLCHAIN_PATH}/../include -I${TOOLCHAIN_PATH}/../fdk_aac"  \
-  --extra-ldflags="-lm -Wl,-Bsymbolic -L${TOOLCHAIN_PATH}/../lib -L${SYSROOT}/usr/lib"  \
+  --extra-cflags="-march=armv8-a -I${PREFIX}/include -I${PREFIX}/include/fdk_aac"  \
+  --extra-ldflags="-lm -Wl,-Bsymbolic -L${PREFIX}/lib"  \
   --extra-ldexeflags="-pie" \
   --extra-libs="-lgcc" \
   --enable-pic \
@@ -79,12 +120,30 @@ cd /_temp/ffmpeg-3.4.1
 make clean
 make
 make install
+# build libffmpeg.so
+$LD -rpath-link=${PREFIX}/lib -rpath-link=${PREFIX}/sysroot/usr/lib -L${PREFIX}/lib -L${PREFIX}/sysroot/usr/lib -soname libffmpeg.so -shared -nostdlib -Bsymbolic --whole-archive --no-undefined -o libffmpeg.so libavcodec/libavcodec.a libavfilter/libavfilter.a libswresample/libswresample.a libavformat/libavformat.a libavutil/libavutil.a libswscale/libswscale.a libpostproc/libpostproc.a -lc -lm -lz -ldl -lx264 -lfdk-aac --dynamic-linker=/system/bin/linker ${PREFIX}/lib/gcc/aarch64-linux-android/4.9.x/libgcc.a
+cp libffmpeg.so ${PREFIX}/lib/libffmpeg.so
+$STRIP --strip-unneeded ${PREFIX}/lib/libffmpeg.so
+# ====== ffmpeg end ======
 
-$LD -rpath-link=${TOOLCHAIN_PATH}/../lib -rpath-link=${SYSROOT}/usr/lib -L${TOOLCHAIN_PATH}/../lib -L${SYSROOT}/usr/lib -soname libffmpeg.so -shared -nostdlib -Bsymbolic --whole-archive --no-undefined -o libffmpeg.so libavcodec/libavcodec.a libavfilter/libavfilter.a libswresample/libswresample.a libavformat/libavformat.a libavutil/libavutil.a libswscale/libswscale.a libpostproc/libpostproc.a -lc -lm -lz -ldl -lx264 -lfdk-aac --dynamic-linker=/system/bin/linker $TOOLCHAIN_PATH/../lib/gcc/aarch64-linux-android/4.9.x/libgcc.a
-cp libffmpeg.so ${TOOLCHAIN_PATH}/../lib/libffmpeg.so
-$STRIP --strip-unneeded $TOOLCHAIN_PATH/../lib/libffmpeg.so
-cd ../..
+# ====== ffmpeg cmd tools begin ======
+# shared library
+$CC ${HOME}/ffmpeg_cmd_src/*.c -I${PREFIX}/include -I${HOME}/${FFMPEG_DIR} -L${PREFIX}/lib -L${PREFIX}/sysroot/usr/lib -lffmpeg -fPIC -Wl,-soname,libffmpegcmd.so -shared -o libffmpegcmd.so
+# exectuable
+$CC ${HOME}/ffmpeg_cmd_src/*.c -I${PREFIX}/include -I${HOME}/${FFMPEG_DIR} -L${PREFIX}/lib -L${PREFIX}/sysroot/usr/lib -lffmpeg -lm -lz -fPIC -pie -o ffmpeg_cmd
+# ====== ffmpeg cmd tools begin ======
 
-cd /_temp/ffmpeg_cmd_src
-sh build.sh
-cd ../..
+rm -rf ~/out/*
+cp -r ${PREFIX}/include/fdk-aac ~/out
+cp -r ${PREFIX}/include/libavcodec ~/out
+cp -r ${PREFIX}/include/libavfilter ~/out
+cp -r ${PREFIX}/include/libavformat ~/out
+cp -r ${PREFIX}/include/libavutil ~/out
+cp -r ${PREFIX}/include/libpostproc ~/out
+cp -r ${PREFIX}/include/libswresample ~/out
+cp -r ${PREFIX}/include/libswscale ~/out
+cp ${PREFIX}/include/x264.h ~/out
+cp ${PREFIX}/include/x264_config.h ~/out
+cp ${PREFIX}/lib/libffmpeg.so ~/out
+cp libffmpegcmd.so ~/out
+cp ffmpeg_cmd ~/out
