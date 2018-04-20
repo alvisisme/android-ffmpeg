@@ -43,7 +43,7 @@ cd ${HOME}
 AAC_ZIP=fdk-aac-0.1.5.tar.gz
 AAC_DIR=fdk-aac-0.1.5
 if [ ! -f ${HOME}/${AAC_ZIP} ]; then
-  wget https://nchc.dl.sourceforge.net/project/opencore-amr/fdk-aac/${AAC_ZIP}
+  wget --no-check-certificate https://nchc.dl.sourceforge.net/project/opencore-amr/fdk-aac/${AAC_ZIP}
 fi
 if [ ! -d ${HOME}/${AAC_DIR} ]; then
   tar zxvf ${HOME}/${AAC_ZIP} > /dev/null
