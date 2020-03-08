@@ -81,52 +81,52 @@ build-ffmpeg(){
   fi
 
   cd ${BUILD_DIR}/${FFMPEG_DIR}
-  # ./configure  \
-  #   --prefix=${PREFIX} \
-  #   --enable-gpl \
-  #   --enable-version3 \
-  #   --enable-nonfree \
-  #   --disable-ffplay \
-  #   --disable-ffprobe \
-  #   --disable-ffserver \
-  #   --disable-doc \
-  #   --disable-avdevice \
-  #   --disable-pthreads \
-  #   --disable-pixelutils \
-  #   --disable-everything \
-  #   --enable-encoder=libx264 \
-  #   --enable-encoder=aac \
-  #   --enable-encoder=libfdk_aac \
-  #   --enable-decoder=h264 \
-  #   --enable-decoder=aac \
-  #   --enable-decoder=libfdk_aac \
-  #   --enable-muxer=hls \
-  #   --enable-muxer=h264 \
-  #   --enable-muxer=rtsp \
-  #   --enable-demuxer=rtsp \
-  #   --enable-demuxer=sdp \
-  #   --enable-demuxer=hls \
-  #   --enable-demuxer=h264 \
-  #   --enable-parser=h264 \
-  #   --enable-parser=aac \
-  #   --enable-protocol=file \
-  #   --enable-protocol=hls \
-  #   --enable-libfdk-aac \
-  #   --enable-libx264 \
-  #   --arch=aarch64 \
-  #   --cross-prefix=${CORSS_PREFIX} \
-  #   --enable-cross-compile \
-  #   --target-os=linux \
-  #   --extra-cflags="-march=armv8-a -I${PREFIX}/include -I${PREFIX}/include/fdk_aac"  \
-  #   --extra-ldflags="-lm -Wl,-Bsymbolic -L${PREFIX}/lib"  \
-  #   --extra-ldexeflags="-pie" \
-  #   --extra-libs="-lgcc" \
-  #   --enable-pic \
-  #   --ignore-tests
+  ./configure  \
+    --prefix=${PREFIX} \
+    --enable-gpl \
+    --enable-version3 \
+    --enable-nonfree \
+    --disable-ffplay \
+    --disable-ffprobe \
+    --disable-ffserver \
+    --disable-doc \
+    --disable-avdevice \
+    --disable-pthreads \
+    --disable-pixelutils \
+    --disable-everything \
+    --enable-encoder=libx264 \
+    --enable-encoder=aac \
+    --enable-encoder=libfdk_aac \
+    --enable-decoder=h264 \
+    --enable-decoder=aac \
+    --enable-decoder=libfdk_aac \
+    --enable-muxer=hls \
+    --enable-muxer=h264 \
+    --enable-muxer=rtsp \
+    --enable-demuxer=rtsp \
+    --enable-demuxer=sdp \
+    --enable-demuxer=hls \
+    --enable-demuxer=h264 \
+    --enable-parser=h264 \
+    --enable-parser=aac \
+    --enable-protocol=file \
+    --enable-protocol=hls \
+    --enable-libfdk-aac \
+    --enable-libx264 \
+    --arch=aarch64 \
+    --cross-prefix=${CORSS_PREFIX} \
+    --enable-cross-compile \
+    --target-os=linux \
+    --extra-cflags="-march=armv8-a -I${PREFIX}/include -I${PREFIX}/include/fdk_aac"  \
+    --extra-ldflags="-lm -Wl,-Bsymbolic -L${PREFIX}/lib"  \
+    --extra-ldexeflags="-pie" \
+    --extra-libs="-lgcc" \
+    --enable-pic \
+    --ignore-tests
 
-  # make clean
-  # make
-  # make install
+  make clean
+  make
+  make install
 
   # build libffmpeg.so
   $LD -rpath-link=${PREFIX}/lib \
