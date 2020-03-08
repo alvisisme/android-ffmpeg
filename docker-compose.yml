@@ -1,0 +1,7 @@
+version: '2'
+services:
+  ffmpeg-for-android:
+    build: .
+    image: ffmpeg-for-android
+    volumes:
+      - ./build:/build
